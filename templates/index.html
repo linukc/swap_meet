@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Товары в наличии</h1>
+    <a href="product" class="btn btn-secondary">Добавить товар</a>
+    <div class="col-md3 border rounded">
+        {% for item in products_invisible %}
+        <div class="col-md6 border rounded">
+            <h2>{{ item.title }}</h2>
+            <div>
+                {{ item.content }}
+            </div>
+            <div>
+                Дата написания - {{ item.created_date }} - Неопубликовано!
+            </div>
+             <div>
+                <a href="/product/{{ item.id }}" class="btn btn-warning">Изменить</a>
+                <a href="/product_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% for item in products_visible %}
+        <div class="col-md6 border rounded">
+            <h2>{{ item.title }}</h2>
+            <div>
+                {{ item.content }}
+            </div>
+            <div>
+                Дата написания - {{ item.created_date }} - Опубликовано!
+            </div>
+            <div>
+                <a href="/product/{{ item.id }}" class="btn btn-warning">Изменить</a>
+                <a href="/product_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="col-md3 border rounded">
+        {% for item in products_other %}
+        <div class="col-md6 border rounded">
+            <h2>{{ item.title }}</h2>
+            <div>
+                {{ item.content }}
+            </div>
+            <div>
+                Автор - {{ item.user.name }}, Дата написания - {{ item.created_date }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}
