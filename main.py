@@ -19,8 +19,8 @@ login_manager.init_app(app)
 app.config['SECRET_KEY'] = 'secret_key'
 app.config['MAX_CONTENT_LENGTH'] = 0.5 * 1024 * 1024 #0.5 MB image max size
 app.config['UPLOAD_PATH'] = 'uploads'
-RECAPTCHA_PUBLIC_KEY = '6LeYIbsSAAAAACRPIllxA7wvXjIE411PfdB2gt2J'
-RECAPTCHA_PRIVATE_KEY = '6LeYIbsSAAAAAJezaIq3Ft_hSTo0YtyeFG-JgRtu'
+app.config['RECAPTCHA_PUBLIC_KEY'] = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+app.config['RECAPTCHA_PRIVATE_KEY'] = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
 
 
 @app.errorhandler(413) #image max size error handler
@@ -134,6 +134,32 @@ def products_delete(id):
     product = db_sess.query(Products).filter(Products.id == id, Products.user == current_user).first()
     if product:
         db_sess.delete(product)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
+
+
+@app.route('/product_pub/<int:id>', methods=['GET', 'POST'])
+@login_required
+def products_publish(id):
+    db_sess = db_session.create_session()
+    product = db_sess.query(Products).filter(Products.id == id, Products.user == current_user).first()
+    if product.is_private:
+        product.is_private=False
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
+
+
+@app.route('/product_hide/<int:id>', methods=['GET', 'POST'])
+@login_required
+def products_hide(id):
+    db_sess = db_session.create_session()
+    product = db_sess.query(Products).filter(Products.id == id, Products.user == current_user).first()
+    if not product.is_private:
+        product.is_private=True
         db_sess.commit()
     else:
         abort(404)

@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.recaptcha import RecaptchaField
 from wtforms import PasswordField, StringField, TextAreaField, SubmitField, BooleanField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired, Email, Length
@@ -15,6 +16,7 @@ class RegisterForm(FlaskForm):
                                                                    Length(min=5)])
     name = StringField('Имя пользователя', validators=[DataRequired()])
     about = TextAreaField("Немного о себе")
+    recaptcha = RecaptchaField()
     submit = SubmitField('Войти')
 
 

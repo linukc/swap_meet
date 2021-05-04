@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Регистрация</h1>
+<h3>Регистрация</h3>
 <form action="" method="post" autocomplete="off">
     {{ form.hidden_tag() }}
     <p> 
@@ -43,6 +43,15 @@
     <p>
         {{ form.about.label }}<br>
         {{ form.about(class="form-control") }}<br>
+        {% for error in form.about.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.recaptcha.label }}<br>
+        {{ form.recaptcha(class="form-control") }}<br>
         {% for error in form.about.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
