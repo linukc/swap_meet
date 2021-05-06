@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, abort
+from flask import Flask, render_template, redirect, request, abort, url_for, send_from_directory
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 import os
 from werkzeug.utils import secure_filename
@@ -17,10 +17,16 @@ app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['SECRET_KEY'] = 'secret_key'
-app.config['MAX_CONTENT_LENGTH'] = 0.5 * 1024 * 1024 #0.5 MB image max size
-app.config['UPLOAD_PATH'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 #1 MB image max size
+app.config['UPLOAD_PATH'] = os.path.join('static','uploads')
 app.config['RECAPTCHA_PUBLIC_KEY'] = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
 app.config['RECAPTCHA_PRIVATE_KEY'] = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static/icon'),
+                               'favicon.ico', mimetype='image/gif')
 
 
 @app.errorhandler(413) #image max size error handler
@@ -140,7 +146,7 @@ def products_delete(id):
     return redirect('/')
 
 
-@app.route('/product_pub/<int:id>', methods=['GET', 'POST'])
+@app.route('/product_pub/<int:id>', methods=['GET'])
 @login_required
 def products_publish(id):
     db_sess = db_session.create_session()
@@ -153,7 +159,7 @@ def products_publish(id):
     return redirect('/')
 
 
-@app.route('/product_hide/<int:id>', methods=['GET', 'POST'])
+@app.route('/product_hide/<int:id>', methods=['GET'])
 @login_required
 def products_hide(id):
     db_sess = db_session.create_session()

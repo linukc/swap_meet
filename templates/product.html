@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h3>Добавление товара</h3>
+    <h3>{{title}}</h3>
     <form action="" method="post" enctype="multipart/form-data" autocomplete="off">
         {{ form.hidden_tag() }}
         <p>
@@ -50,7 +50,9 @@
             {% endfor %}
         </p>
         <p>{{ form.is_private() }} {{ form.is_private.label }}</p>
-        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+        <div>
+            <p>{{ form.submit(type="submit", class="btn btn-primary") }} <a href="/" class="btn btn-danger">Отмена</a> </p>
+        </div>
         {{ message }}
     </form>
 {% endblock %}
