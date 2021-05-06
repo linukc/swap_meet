@@ -1,12 +1,17 @@
 import requests
 from wtforms.validators import ValidationError
 
-def known_location(form, field):
+def know_location(form=None, field=None, req=None):
+    if req:
+        data = req
+    else:
+        data = field.data
+
     geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
 
     geocoder_params = {
     "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
-    "geocode": field.data,
+    "geocode": data,
     "format": "json"}
 
     response = requests.get(geocoder_api_server, params=geocoder_params)

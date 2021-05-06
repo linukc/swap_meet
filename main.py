@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 import imghdr
 import io
+import requests
 
 from forms.products import ProductsForm
 from forms.user import RegisterForm, LoginForm
@@ -12,6 +13,7 @@ from data.products import Products
 from data.users import User
 from data.category import Category
 from data import db_session
+from forms.custom_flask_wtf_validators import know_location
 
 app = Flask(__name__)
 login_manager = LoginManager()
@@ -170,6 +172,24 @@ def products_hide(id):
     else:
         abort(404)
     return redirect('/my_products')
+
+
+@app.route('/product/<int:id>/map', methods=['GET'])
+def product_map(id):
+    db_sess = db_session.create_session()
+    product = db_sess.query(Products).filter(Products.id == id, Products.user == current_user).first()
+
+    longi, latt = know_location(req=product.location)
+    map_params = {"ll": ",".join([longi, latt]),
+                  "size": ",".join(['450', '450']),
+                  "l": "map",
+                  "pt":f"{longi},{latt},flag"}
+    if current_user:
+        longi_user, latt_user = know_location(req=current_user.location)
+        map_params['pt'] += f'~{longi_user},{latt_user},home'
+
+    r = requests.get("http://static-maps.yandex.ru/1.x/", params = map_params)
+    return redirect(r.url)
 
 
 @app.route('/product/<int:id>', methods=['GET', 'POST'])
