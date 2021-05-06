@@ -2,6 +2,7 @@
 
 {% block content %}
 <h3>Регистрация</h3>
+<p style="color: crimson;">{{message}}</p>
 <form action="" method="post" autocomplete="off">
     {{ form.hidden_tag() }}
     <p> 
@@ -49,16 +50,25 @@
             </p>
         {% endfor %}
     </p>
-    <p>
-        {{ form.recaptcha.label }}<br>
-        {{ form.recaptcha(class="form-control") }}<br>
-        {% for error in form.about.errors %}
+    <p> 
+        {{ form.location.label }}<br>
+        {{ form.location(class="form-control") }}<br>
+        {% for error in form.location.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
             </p>
         {% endfor %}
     </p>
+    <p>
+        {{ form.recaptcha.label }}<br>
+        {{ form.recaptcha(class="form-control") }}<br>
+        {% for error in form.recaptcha.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <p>{{ form.accept_rules() }} {{ form.accept_rules.label }}</p>
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-    {{message}}
 </form>
 {% endblock %}
