@@ -35,11 +35,11 @@
         {% if current_user.is_authenticated %}
             <div class="dropdown text-end">
                 <a class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser" data-toggle="dropdown" aria-expanded="false">
-                  <img src="https://github.com/mdo.png" alt="mdo" width="50" height="50" class="rounded-circle" >
+                  <img src="{{url_for('static', filename='icon/avatar.png')}}" alt="mdo" width="50" height="50" class="rounded-circle" >
                 </a>
                 <ul class="dropdown-menu dropdown-menu-right text-small" aria-labelledby="dropdownUser">
-                  <li><a class="dropdown-item" href="product">Добавить товар</a></li>
                   <li><a class="dropdown-item" href="#">Профиль</a></li>
+                  <li><a class="dropdown-item" href="/my_products">Мои товары</a></li>
                   <li><hr class="dropdown-divider"></li>
                   <li><a class="dropdown-item" href="/logout">Выйти</a></li>
                 </ul>

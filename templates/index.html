@@ -1,68 +1,74 @@
 {% extends "base.html" %}
-{%set x = products_invisible|list|length + products_visible|list|length%}
+{%set my_prod_count = products_invisible|list|length + products_visible|list|length%}
+{%set for_sale_prod_count = products_for_sale|list|length%}
 {% block content %}
-    <div class="col-md3  border rounded">
-        <h3><span style="font-weight:normal">Ваши скрытые товары</span> ({{ products_invisible|list|length }}/{{x}})</h3>
-        {% for item in products_invisible %}
-        <div class="col-md6 border rounded" style="background-color:rgb(224, 224, 221);">
-            <h2>{{ item.title }}</h2>
-            <div>
-                {{ item.description }}
-            </div>
-            <div>
-                Дата написания - {{ item.created_date }}
-            </div>
-            <div>
-                Расположение - {{ item.location }}
-            </div>
-            <div>
-                Цена - {{ item.price }}
-            </div>
-                <img src="{{url_for('static', filename='uploads/'+item.photo)}}" width="256" height="256">
-            <div>
-                <a href="/product_pub/{{ item.id }}" class="btn btn-success">Опубликовать</a>
-                <a href="/product/{{ item.id }}" class="btn btn-warning">Изменить</a>
-                <a href="/product_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
-            </div>
-        </div>
-        {% endfor %}
-        <h3><span style="font-weight:normal">Ваши опубликованные товары</span> ({{ products_visible|list|length }}/{{x}})</h3>
-        {% for item in products_visible %}
-        <div class="col-md6 border rounded">
-            <h2>{{ item.title }}</h2>
-            <div>
-                {{ item.description }}
-            </div>
-            <div>
-                Дата написания - {{ item.created_date }}
-            </div>
-            <div>
-                Расположение - {{ item.location }}
-            </div>
-            <div>
-                Цена - {{ item.price }}
-            </div>
-                <img src="{{url_for('static', filename='uploads/'+item.photo)}}" width="256" height="256">
-            <div>
-            <div>
-                <a href="/product/{{ item.id }}" class="btn btn-warning">Изменить</a>
-                <a href="/product_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
-                <a href="/product_hide/{{ item.id }}" class="btn" style="background-color:black;color: white;">Спрятать</a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
 
+{% if not products_for_sale%}
+<a href="/product" class="btn btn-secondary">Добавить товар</a>
+        {%set inv_prod_count = products_invisible|list|length%}    
+        <h3><span style="font-weight:normal">Ваши скрытые товары</span> ({{ inv_prod_count }}/{{my_prod_count}})</h3>
+        {% if inv_prod_count > 0 %}
+        <div class="col-md3 border rounded">
+            {% for item in products_invisible %}
+            <div class="col-md6 border rounded" style="background-color:rgb(224, 224, 221);">
+                <div class="post-thumb"><img src="{{url_for('static', filename='uploads/'+item.photo)}}" width="256" height="256"></div>
+                <div class="post-content">
+                    <h2>{{ item.title }}</h2>
+                    <p>{{ item.description }}</p>
+                    <p>Дата написания - {{ item.created_date }}</p>
+                    <p>Автор - {{ item.user.name }}</p>
+                    <p>Расположение - {{ item.location }}</p>
+                    <p>Цена - {{ item.price }}</p>
+                </div>
+                <div>
+                    <a href="/product_pub/{{ item.id }}" class="btn btn-success">Опубликовать</a>
+                    <a href="/product/{{ item.id }}" class="btn btn-warning">Изменить</a>
+                    <a href="/product_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {%endif%}
+
+        {%set vis_prod_count = products_visible|list|length%}
+        <h3><span style="font-weight:normal">Ваши опубликованные товары</span> ({{vis_prod_count }}/{{my_prod_count}})</h3> 
+        {% if vis_prod_count > 0 %}
+        <div class="col-md3 border rounded">
+            {% for item in products_visible %}
+            <div class="col-md6 border rounded">
+                <div class="post-thumb"><img src="{{url_for('static', filename='uploads/'+item.photo)}}" width="256" height="256"></div>
+                <div class="post-content">
+                    <h2>{{ item.title }}</h2>
+                    <p>{{ item.description }}</p>
+                    <p>Дата написания - {{ item.created_date }}</p>
+                    <p>Автор - {{ item.user.name }}</p>
+                    <p>Расположение - {{ item.location }}</p>
+                    <p>Цена - {{ item.price }}</p>
+                </div>
+                <div>
+                    <a href="/product/{{ item.id }}" class="btn btn-warning">Изменить</a>
+                    <a href="/product_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
+                    <a href="/product_hide/{{ item.id }}" class="btn" style="background-color:black;color: white;">Спрятать</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+{% endif%}
+{% if (not products_invisible) and (not products_visible)%}
     <h3 style="text-align:center; margin-top: 50px"><span style="font-weight:normal">Доступные для заказа товары</span> 
-        ({{products_other|list|length}}/{{products_other|list|length}})</h3>
+        ({{for_sale_prod_count}}/{{for_sale_prod_count}})</h3>
+    {% if for_sale_prod_count > 0 %}
     <div class="col-md3 border rounded">
-        {% for item in products_other %}
+        {% for item in products_for_sale %}
         <div class="col-md6 border rounded">
             <div class="post-thumb"><img src="{{url_for('static', filename='uploads/'+item.photo)}}" width="256" height="256"></div>
             <div class="post-content">
                 <h2>{{ item.title }}</h2>
                 <p>{{ item.description }}</p>
                 <p>Дата написания - {{ item.created_date }}</p>
+                <p>Автор - {{ item.user.name }}</p>
                 <p>Расположение - {{ item.location }}</p>
                 <p>Цена - {{ item.price }}</p>
             </div>
@@ -72,5 +78,6 @@
         </div>
         {% endfor %}
     </div>
-
+    {% endif%}
+{% endif%}
 {% endblock %}

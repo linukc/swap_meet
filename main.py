@@ -91,18 +91,17 @@ def logout():
 @app.route("/")
 def index():
     db_sess = db_session.create_session()
-    products_visible = []
-    products_invisible = []
-    products_other = []
-    if current_user.is_authenticated:
-        products_visible = db_sess.query(Products).filter(Products.user == current_user, Products.is_private == False)
-        products_invisible = db_sess.query(Products).filter(Products.user == current_user, Products.is_private == True)
-        products_other = db_sess.query(Products).filter(Products.user != current_user, Products.is_private != True)
-    else:
-        products_other = db_sess.query(Products).filter(Products.is_private != True)
-    return render_template("index.html", products_visible=products_visible,
-                                         products_invisible=products_invisible,
-                                         products_other=products_other)
+    products = db_sess.query(Products).filter(Products.is_private != True)
+    return render_template("index.html", products_for_sale=products)
+
+
+@app.route("/my_products")
+def my_products():
+    db_sess = db_session.create_session()
+    products_invisible = db_sess.query(Products).filter(Products.user == current_user, Products.is_private == True)
+    products_visible = db_sess.query(Products).filter(Products.user == current_user, Products.is_private != True)
+    return render_template("index.html", products_invisible=products_invisible,
+                                         products_visible=products_visible)
 
 
 @app.route('/product', methods=['GET', 'POST'])
@@ -129,7 +128,7 @@ def add_product():
         current_user.products.append(product)
         db_sess.merge(current_user)
         db_sess.commit()
-        return redirect('/')
+        return redirect('/my_products')
     return render_template('product.html', title='Добавление товара', form=form)
 
 
@@ -156,7 +155,7 @@ def products_publish(id):
         db_sess.commit()
     else:
         abort(404)
-    return redirect('/')
+    return redirect('/my_products')
 
 
 @app.route('/product_hide/<int:id>', methods=['GET'])
@@ -169,7 +168,7 @@ def products_hide(id):
         db_sess.commit()
     else:
         abort(404)
-    return redirect('/')
+    return redirect('/my_products')
 
 
 @app.route('/product/<int:id>', methods=['GET', 'POST'])
