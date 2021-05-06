@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, abort, url_for, send_from_directory
+from flask import Flask, render_template, redirect, request, abort, url_for, send_from_directory, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 import os
 from werkzeug.utils import secure_filename
@@ -6,6 +6,7 @@ from werkzeug.datastructures import FileStorage
 import imghdr
 import io
 import requests
+from cloudipsp import Api, Checkout
 
 from forms.products import ProductsForm
 from forms.user import RegisterForm, LoginForm
@@ -95,7 +96,8 @@ def logout():
 def index():
     db_sess = db_session.create_session()
     products = db_sess.query(Products).filter(Products.is_private != True)
-    return render_template("index.html", products_for_sale=products)
+    return render_template("index.html", products_for_sale=products,
+                                         searchbar_title='Search...')
 
 
 @app.route("/my_products")
@@ -192,6 +194,24 @@ def product_map(id):
     return redirect(r.url)
 
 
+@app.route('/product/<int:id>/buy', methods=['GET'])
+def product_payment(id):
+    db_sess = db_session.create_session()
+    product = db_sess.query(Products).filter(Products.id == id, Products.user == current_user).first()
+
+    api = Api(merchant_id=1396424,
+              secret_key='test')
+
+    checkout = Checkout(api=api)
+
+    data = {
+        "currency": "RUB",
+        "amount": int(product.price)*100
+    }
+    url = checkout.url(data).get('checkout_url')
+    return redirect(url)
+
+
 @app.route('/product/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_product(id):
@@ -230,6 +250,41 @@ def edit_product(id):
             abort(404)
     return render_template('product.html', title='Редактирование товара', form=form)
 
+
+@app.route('/user_profile', methods=['GET', 'POST'])
+@login_required
+def edit_user():
+    form = RegisterForm()
+    if request.method == "GET":
+        form.email.data = current_user.email
+        form.name.data = current_user.name
+        form.about.data = current_user.about
+        form.location.data = current_user.location
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        if user:
+            user.name=form.name.data
+            user.email=form.email.data
+            user.about=form.about.data
+            user.location=form.location.data
+            user.set_password(form.password.data)  
+            db_sess.commit()
+            return redirect('/')
+        else:
+            abort(404)
+    return render_template('register.html', title='Редактирование профиля', form=form)
+
+
+@app.route('/search', methods=['GET','POST'])
+def search():
+    if request.method == 'POST':
+        search_req = request.form.get('searchbar')
+        db_sess = db_session.create_session()
+        products = db_sess.query(Products).filter(Products.is_private != True, Products.title.like(f"%{search_req}%"))
+    return render_template("index.html", products_for_sale=products, 
+                                         searchbar_title=search_req)
+    
 
 def main():
     db_session.global_init("db/store.db")

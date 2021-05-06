@@ -3,8 +3,9 @@
 {%set for_sale_prod_count = products_for_sale|list|length%}
 {% block content %}
 
+
 {% if not products_for_sale%}
-<a href="/product" class="btn btn-secondary">Добавить товар</a>
+<a href="/product" class="btn btn-secondary" style="margin-top: 10px;">Добавить товар</a>
         {%set inv_prod_count = products_invisible|list|length%}    
         <h3><span style="font-weight:normal">Ваши скрытые товары</span> ({{ inv_prod_count }}/{{my_prod_count}})</h3>
         {% if inv_prod_count > 0 %}
@@ -56,10 +57,15 @@
         {% endif %}
 
 {% endif%}
+
 {% if (not products_invisible) and (not products_visible)%}
+    <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" action="{{url_for('search')}}" method="POST" style="margin-top: 30px;">
+        <input type="search" class="form-control" placeholder="{{searchbar_title}}" aria-label="Search" name="searchbar">
+        <a href="/" class="btn btn-outline-primary me-2" style="margin-top: 10px;">Очистить поиск</a>
+    </form>
     <h3 style="text-align:center; margin-top: 50px"><span style="font-weight:normal">Доступные для заказа товары</span> 
-        ({{for_sale_prod_count}}/{{for_sale_prod_count}})</h3>
-    {% if for_sale_prod_count > 0 %}
+        ({{for_sale_prod_count}})</h3>
+    {% if for_sale_prod_count > 0%}
     <div class="col-md3 border rounded">
         {% for item in products_for_sale %}
         <div class="col-md6 border rounded">
@@ -73,7 +79,8 @@
                 <p>Цена - {{ item.price }}</p>
             </div>
             <div>
-                <a href="/product/{{item.id}}/map" class="btn btn-primary">Показать карту</a>
+                <a href="/product/{{item.id}}/map" class="btn btn-primary me-2">Показать карту</a>
+                <a href="/product/{{item.id}}/buy" class="btn btn-warning me-2">Купить</a>
             </div>
         </div>
         {% endfor %}
