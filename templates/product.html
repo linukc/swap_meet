@@ -49,6 +49,15 @@
                 </p>
             {% endfor %}
         </p>
+        <p>
+            {{ form.category.label }}<br>
+            {{ form.category(class="form-control") }}<br>
+            {% for error in form.category.errors %}
+                <p class="alert alert-danger" role="alert">
+                    {{ error }}
+                </p>
+            {% endfor %}
+        </p>
         <p>{{ form.is_private() }} {{ form.is_private.label }}</p>
         <div>
             <p>{{ form.submit(type="submit", class="btn btn-primary") }} <a href="/" class="btn btn-danger">Отмена</a> </p>

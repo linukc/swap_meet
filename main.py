@@ -7,12 +7,12 @@ import imghdr
 import io
 import requests
 from cloudipsp import Api, Checkout
+from sqlalchemy import func, any_, or_
 
 from forms.products import ProductsForm
 from forms.user import RegisterForm, LoginForm
 from data.products import Products
 from data.users import User
-from data.category import Category
 from data import db_session
 from forms.custom_flask_wtf_validators import know_location
 
@@ -95,12 +95,16 @@ def logout():
 @app.route("/")
 def index():
     db_sess = db_session.create_session()
-    products = db_sess.query(Products).filter(Products.is_private != True)
+    if current_user.is_authenticated:
+        products = db_sess.query(Products).filter(Products.is_private != True, Products.user != current_user)
+    else:
+        products = db_sess.query(Products).filter(Products.is_private != True)
     return render_template("index.html", products_for_sale=products,
                                          searchbar_title='Search...')
 
 
 @app.route("/my_products")
+@login_required
 def my_products():
     db_sess = db_session.create_session()
     products_invisible = db_sess.query(Products).filter(Products.user == current_user, Products.is_private == True)
@@ -122,6 +126,7 @@ def add_product():
         product.location = form.location.data
         product.price = form.price.data
         product.is_private = form.is_private.data
+        product.category = form.category.data
 
         #save image  
         f = form.photo.data
@@ -130,6 +135,7 @@ def add_product():
             f.save(os.path.join(app.config['UPLOAD_PATH'], filename))
             product.photo = filename
 
+        #тут через раз падает с багом lazy
         current_user.products.append(product)
         db_sess.merge(current_user)
         db_sess.commit()
@@ -147,7 +153,7 @@ def products_delete(id):
         db_sess.commit()
     else:
         abort(404)
-    return redirect('/')
+    return redirect('/my_products')
 
 
 @app.route('/product_pub/<int:id>', methods=['GET'])
@@ -179,16 +185,18 @@ def products_hide(id):
 @app.route('/product/<int:id>/map', methods=['GET'])
 def product_map(id):
     db_sess = db_session.create_session()
-    product = db_sess.query(Products).filter(Products.id == id, Products.user == current_user).first()
+    product = db_sess.query(Products).filter(Products.id == id).first()
 
     longi, latt = know_location(req=product.location)
-    map_params = {"ll": ",".join([longi, latt]),
+    map_params = {
                   "size": ",".join(['450', '450']),
                   "l": "map",
                   "pt":f"{longi},{latt},flag"}
-    if current_user:
+    if current_user.is_authenticated:
         longi_user, latt_user = know_location(req=current_user.location)
         map_params['pt'] += f'~{longi_user},{latt_user},home'
+    else:
+        map_params['z'] = 13
 
     r = requests.get("http://static-maps.yandex.ru/1.x/", params = map_params)
     return redirect(r.url)
@@ -197,7 +205,7 @@ def product_map(id):
 @app.route('/product/<int:id>/buy', methods=['GET'])
 def product_payment(id):
     db_sess = db_session.create_session()
-    product = db_sess.query(Products).filter(Products.id == id, Products.user == current_user).first()
+    product = db_sess.query(Products).filter(Products.id == id).first()
 
     api = Api(merchant_id=1396424,
               secret_key='test')
@@ -236,6 +244,7 @@ def edit_product(id):
             product.location = form.location.data
             product.price = form.price.data
             product.is_private = form.is_private.data
+            product.category = form.category.data
 
             #save image  
             f = form.photo.data
@@ -245,7 +254,7 @@ def edit_product(id):
                 product.photo = filename
                 
             db_sess.commit()
-            return redirect('/')
+            return redirect('/my_products')
         else:
             abort(404)
     return render_template('product.html', title='Редактирование товара', form=form)
@@ -275,16 +284,25 @@ def edit_user():
             abort(404)
     return render_template('register.html', title='Редактирование профиля', form=form)
 
-
+ 
 @app.route('/search', methods=['GET','POST'])
 def search():
     if request.method == 'POST':
-        search_req = request.form.get('searchbar')
         db_sess = db_session.create_session()
-        products = db_sess.query(Products).filter(Products.is_private != True, Products.title.like(f"%{search_req}%"))
+
+        search_req = request.form.get('searchbar')
+        sql_search_req = [str.lower(f'''%{i}%''') for i in search_req.split()]
+
+        if current_user.is_authenticated:
+            products = db_sess.query(Products).filter(Products.is_private != True, 
+                                                  or_(*[func.lower(Products.title).like(i) for i in sql_search_req]),
+                                                  Products.user != current_user)
+        else:
+            products = db_sess.query(Products).filter(Products.is_private != True, 
+                                                  or_(*[func.lower(Products.title).like(i) for i in sql_search_req]))
     return render_template("index.html", products_for_sale=products, 
-                                         searchbar_title=search_req)
-    
+                                         searchbar_title=f"Результаты по запросу: {search_req}")
+
 
 def main():
     db_session.global_init("db/store.db")
